@@ -1,0 +1,75 @@
+mysql:
+  image: mysql:latest
+  container_name: mysql
+  domainname: db.gamewheel.local
+  hostname: db.gamewheel.local
+  ports:
+    - "53306:3306"
+  expose:
+    - "3306"
+  environment:
+    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    - MYSQL_DATABASE=gw_core
+
+rabbitmq:
+  image: rabbitmq:management
+  container_name: rabbitmq
+  domainname: mq.gamewheel.local
+  hostname: mq.gamewheel.local
+  ports:
+    - "55672:15672"
+  expose:
+    - "5672"
+    - "15672"
+  environment:
+    - HOSTNAME=mq.gamewheel.local
+    - RABBITMQ_USE_LONGNAME=true
+    - RABBITMQ_ERLANG_COOKIE=gw_mq_cookie
+    - RABBITMQ_NODENAME=rabbit@mq.gamewheel.local
+    - VIRTUAL_HOST=vm-mq.gamewheel.local
+    - VIRTUAL_PORT=15672
+
+go_test_server:
+  image: go_test_server:latest
+  container_name: go_test_server
+  domainname: go_test_server.gamewheel.local
+  hostname: go_test_server.gamewheel.local
+  ports:
+    - "58080:8080"
+  expose:
+    - "8080"
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_server:/go/src/github.com/ugarcia/go_test_server
+  links:
+    - rabbitmq:mq.gamewheel.local
+  environment:
+    - VIRTUAL_HOST=vm-server.gamewheel.local
+    - VIRTUAL_PORT=8080
+    - WEBSOCKETS=1
+
+go_test_db_worker:
+  image: go_test_db_worker:latest
+  container_name: go_test_db_worker
+  domainname: go_test_db_worker.gamewheel.local
+  hostname: go_test_db_worker
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_db_worker:/go/src/github.com/ugarcia/go_test_db_worker
+  links:
+    - rabbitmq:mq.gamewheel.local
+    - mysql:db.gamewheel.local
+
+nginx:
+  image: saidimu/nginx-proxy:latest
+  container_name: nginx
+  domainname: nginx.gamewheel.local
+  hostname: nginx.gamewheel.local
+  ports:
+    - "50080:80"
+    - "50443:443"
+  expose:
+    - "80"
+    - "443"
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+  environment:
+    - DEFAULT_HOST=vm-server.gamewheel.local
