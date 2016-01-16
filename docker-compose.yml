@@ -10,6 +10,8 @@ mysql:
   environment:
     - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     - MYSQL_DATABASE=gw_core
+  volumes:
+    - ./sql:/docker-entrypoint-initdb.d
 
 rabbitmq:
   image: rabbitmq:management
@@ -46,6 +48,16 @@ go_test_server:
     - VIRTUAL_HOST=vm-server.gamewheel.local
     - VIRTUAL_PORT=8080
     - WEBSOCKETS=1
+
+go_test_basic_module:
+  image: go_test_basic_module:latest
+  container_name: go_test_basic_module
+  domainname: go_test_basic_module.gamewheel.local
+  hostname: go_test_basic_module
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_basic_module:/go/src/github.com/ugarcia/go_test_basic_module
+  links:
+    - rabbitmq:mq.gamewheel.local
 
 go_test_db_worker:
   image: go_test_db_worker:latest

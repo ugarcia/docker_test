@@ -19,4 +19,3 @@ ADD id_rsa $HOME/.ssh/id_rsa
 RUN chmod 700 $HOME/.ssh/id_rsa
 RUN echo "Host github.com\n\tStrictHostKeyChecking no\n" >> $HOME/.ssh/config
 RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
-
