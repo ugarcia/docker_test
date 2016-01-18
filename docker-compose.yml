@@ -9,8 +9,11 @@ mysql:
     - "3306"
   environment:
     - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    - MYSQL_DATABASE=gw_core
+    # - MYSQL_DATABASE=gw_core
+  # entrypoint: /localdb-run.sh
   volumes:
+    # - ./localdb-run.sh:/localdb-run.sh    
+    # - /usr/local/var/mysql:/var/lib/mysql
     - ./sql:/docker-entrypoint-initdb.d
 
 rabbitmq:
@@ -40,35 +43,41 @@ go_test_server:
     - "58080:8080"
   expose:
     - "8080"
-  volumes:
-    - ../go/src/github.com/ugarcia/go_test_server:/go/src/github.com/ugarcia/go_test_server
   links:
     - rabbitmq:mq.gamewheel.local
   environment:
     - VIRTUAL_HOST=vm-server.gamewheel.local
     - VIRTUAL_PORT=8080
     - WEBSOCKETS=1
+  # This is for development 
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_server:/go/src/app  
+  command: go run main.go
 
 go_test_basic_module:
   image: go_test_basic_module:latest
   container_name: go_test_basic_module
   domainname: go_test_basic_module.gamewheel.local
   hostname: go_test_basic_module
-  volumes:
-    - ../go/src/github.com/ugarcia/go_test_basic_module:/go/src/github.com/ugarcia/go_test_basic_module
   links:
     - rabbitmq:mq.gamewheel.local
+  # This is for development 
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_basic_module:/go/src/app 
+  command: go run main.go    
 
 go_test_db_worker:
   image: go_test_db_worker:latest
   container_name: go_test_db_worker
   domainname: go_test_db_worker.gamewheel.local
   hostname: go_test_db_worker
-  volumes:
-    - ../go/src/github.com/ugarcia/go_test_db_worker:/go/src/github.com/ugarcia/go_test_db_worker
   links:
     - rabbitmq:mq.gamewheel.local
     - mysql:db.gamewheel.local
+  # This is for development 
+  volumes:
+    - ../go/src/github.com/ugarcia/go_test_db_worker:/go/src/app  
+  command: go run main.go    
 
 nginx:
   image: saidimu/nginx-proxy:latest
